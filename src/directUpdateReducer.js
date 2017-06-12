@@ -4,7 +4,7 @@ const PrimitiveWrapper = require('./PrimitiveWrapper');
 
 module.exports = function directUpdateReducerCreator() {
   // global map
-  const __map = new Map();
+  const __map = new WeakMap();
   return function directUpdateReducer(previousState, action) {
     let nextState = previousState;
     const { type, batchArgs } = action;
