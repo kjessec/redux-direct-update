@@ -40,12 +40,12 @@ function sanitize(state) {
   else if(exports.isObject(state)) {
     const nextState = {};
     Object.keys(state).forEach(key => {
-      nextState[key] = flattenIfWrappedPrimitive(state[key]);
+      nextState[key] = state[key];
     });
     return nextState;
   }
 
-  return flattenIfWrappedPrimitive(state);
+  return state;
 }
 
 function flattenIfWrappedPrimitive(value) {
