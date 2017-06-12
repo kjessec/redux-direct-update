@@ -141,7 +141,7 @@ test('stress test', function(t) {
   };
   const store = createTestStore(sampleComplexData);
 
-  for(let i=0; i<1000000; i++) {
+  for(let i=0; i<200; i++) {
     console.time(1);
     const state = store.getState();
     directUpdate(() => [
@@ -149,4 +149,25 @@ test('stress test', function(t) {
     ]);
     console.timeEnd(1);
   }
+  t.ok(true);
+  t.end();
+});
+
+test('passing refs to other function', function(t) {
+  const sampleComplexData = {
+    a: { b: { c: { d: { e: { f: [{ g: { h: 4 } }] } } } } }
+  };
+  const store = createTestStore(sampleComplexData);
+
+  const updateInFunction = (variable, target) => {
+    directUpdate(() => [
+      [variable.h, target]
+    ]);
+  };
+
+  const state = store.getState();
+  updateInFunction(state.a.b.c.d.e.f[0].g, 4444);
+  t.equal(store.getState().a.b.c.d.e.f[0].g.h, 4444);
+
+  t.end();
 });

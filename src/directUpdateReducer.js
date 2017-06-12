@@ -38,6 +38,9 @@ module.exports = function directUpdateReducerCreator() {
 
 function transformBatchArgsToUpdateMeta(map, state, batchArgs) {
   return batchArgs.map(([key, newValue]) => {
+    if(typeof key !== 'object') {
+      throw new Error('Update path is NOT correct. Did you pass a primitive value itself as the update key?');
+    }
     const updatePath = key instanceof PrimitiveTransaction ? key.path : map.get(key);
     return [updatePath, newValue];
   });
