@@ -1,16 +1,17 @@
 const { isArray, isObject } = require('./utils');
 
-module.exports = function createDirectUpdatePostProcess(map, proxyHandler) {
+module.exports = function createDirectUpdatePostProcess(map) {
   // global map
   let previousState = {};
-  return function directUpdatePostprocessingReducer(intermediateState) {
-    const nextState = walkTreeAndFindChanges(
+  return function directUpdatePostprocessingReducer(nextState) {
+    if(!nextState) return nextState;
+
+    walkTreeAndFindChanges(
       previousState,
-      intermediateState,
-      map,
-      proxyHandler,
-      function(path, previousState, changedState) {
-        map.set(changedState, path);
+      nextState,
+      function(path, previousState, nextState) {
+        map.delete(previousState);
+        map.set(nextState, path);
       }
     );
 
@@ -21,35 +22,23 @@ module.exports = function createDirectUpdatePostProcess(map, proxyHandler) {
   };
 };
 
-function walkTreeAndFindChanges(previousState, nextState, map, proxyHandler, callMeWhenChanged, path = 'root') {
+function walkTreeAndFindChanges(previousState, nextState, callMeWhenChanged, path = 'root') {
   // exit if unchanged
-  if(map.has(previousState) && map.get(previousState) === map.get(nextState)) return nextState;
+  if(previousState === nextState) return;
 
-  let changedState = null;
   if(isArray(nextState)) {
-    changedState = new Proxy(nextState.slice(0), proxyHandler).map((e, i) =>
-      walkTreeAndFindChanges((previousState || [])[i], e, map, proxyHandler, callMeWhenChanged, `${path}.${i}`)
+    callMeWhenChanged(path, previousState, nextState);
+    nextState.forEach((e, i) =>
+      walkTreeAndFindChanges((previousState || [])[i], e, callMeWhenChanged, `${path}.${i}`)
     );
-
-    callMeWhenChanged(path, previousState, changedState);
   }
 
   else if(isObject(nextState)) {
-    const dirtyNextState = {};
+    callMeWhenChanged(path, previousState, nextState);
     Object.keys(nextState).forEach(key => {
-      dirtyNextState[key] = walkTreeAndFindChanges(
-        (previousState || {})[key], nextState[key], map, proxyHandler, callMeWhenChanged, `${path}.${key}`
+      walkTreeAndFindChanges(
+        (previousState || {})[key], nextState[key], callMeWhenChanged, `${path}.${key}`
       );
     });
-    changedState = new Proxy(dirtyNextState, proxyHandler);
-
-    callMeWhenChanged(path, previousState, dirtyNextState);
   }
-
-  else {
-    changedState = nextState;
-  }
-
-  // carry on...
-  return changedState;
 }

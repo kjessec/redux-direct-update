@@ -63,7 +63,7 @@ test('directUpdate works', function(t) {
   const state = store.getState();
 
   store.directUpdate(() => [
-    [state.data, 9999]
+    [state, state => ({ ...state, data: 9999 })]
   ]);
 
   t.equal(store.getState().data, 9999, 'works ok');
@@ -75,11 +75,10 @@ test('functional update works', function(t) {
   const state = store.getState();
 
   store.directUpdate(() => [
-    [state.data, state => ({ ...state, added: 1 })]
+    [state, state => ({ ...state, added: 1 })]
   ]);
 
-
-  t.equal(store.getState().data.added, 1, 'works ok');
+  t.equal(store.getState().added, 1, 'works ok');
   t.end();
 });
 
@@ -114,24 +113,24 @@ test('complex works', function(t) {
   store.dispatch(ACTION_INCREMENT); // 3
   store.dispatch(ACTION_INCREMENT); // 4
   store.directUpdate(() => [
-    [state.jesse.a.b.c.d.e[0].hello, 'goodbye'],
-    [state.supper[0].sth, value => value + 1],
-    [state.supper[1].sth, 3333333]
+    [state.jesse.a.b.c.d.e[0], state => ({ ...state, hello: 'goodbye' })],
+    [state.supper[0], state => ({ ...state, sth: 3 })],
+    [state.supper[1], state => ({ ...state, sth: 3333333 })]
   ]);
   store.dispatch(ACTION_INCREMENT); // 5
   store.dispatch(ACTION_INCREMENT); // 6
   store.dispatch(ACTION_INCREMENT); // 7
   const nextState1 = store.getState();
   store.directUpdate(() => [
-    [nextState1.supper[1].sth, 1]
+    [nextState1.supper[1], state => ({ ...state, sth: 5 })]
   ]);
   store.dispatch(ACTION_INCREMENT); // 8
 
   const nextState = store.getState();
-  t.equal(+nextState.data, 8);
-  t.ok(nextState.jesse.a.b.c.d.e[0].hello.valueOf() === 'goodbye');
-  t.equal(+nextState.supper[0].sth, 2);
-  t.equal(+nextState.supper[1].sth, 1);
+  t.equal(nextState.data, 8);
+  t.ok(nextState.jesse.a.b.c.d.e[0].hello === 'goodbye');
+  t.equal(nextState.supper[0].sth, 3);
+  t.equal(nextState.supper[1].sth, 5);
   t.end();
 });
 
@@ -145,7 +144,7 @@ test('stress test', function(t) {
     console.time(1);
     const state = store.getState();
     directUpdate(() => [
-      [state.a.b.c.d.e.f.g.h, x => x+1]
+      [state.a.b.c.d.e.f.g, state => ({ ...state, h: state.h+1 })]
     ]);
     console.timeEnd(1);
   }
@@ -161,7 +160,7 @@ test('passing refs to other function', function(t) {
 
   const updateInFunction = (variable, target) => {
     directUpdate(() => [
-      [variable.h, target]
+      [variable, state => ({ ...state, h: target })]
     ]);
   };
 

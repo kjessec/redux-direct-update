@@ -1,15 +1,14 @@
 const { ACTION_DIRECT_UPDATE } = require('./constants');
 const { deepPlant } = require('./utils');
-const { PrimitiveTransaction } = require('./constants');
 
-module.exports = function createDirectUpdateHandler(map, proxyHandler) {
+module.exports = function createDirectUpdateHandler(map) {
   return function directUpdateHandlerReducer(previousState, action) {
     // un update;
     if(action.type === ACTION_DIRECT_UPDATE) {
-      const { batchArgs } = action;
-      proxyHandler.directUpdateTransaction = true;
-      const updateMeta = transformBatchArgsToUpdateMeta(map, previousState, batchArgs());
-      proxyHandler.directUpdateTransaction = false;
+      let { batchArgs } = action;
+      if(typeof batchArgs === 'function') batchArgs = batchArgs();
+
+      const updateMeta = transformBatchArgsToUpdateMeta(map, previousState, batchArgs);
 
       // return newly updated state
       return updateMeta.reduce((prevState, meta) => {
@@ -27,7 +26,6 @@ function transformBatchArgsToUpdateMeta(map, state, batchArgs) {
     if(typeof key !== 'object') {
       throw new Error('Update path is NOT correct. Did you pass a primitive value itself as the update key?');
     }
-    const updatePath = key instanceof PrimitiveTransaction ? key.path : map.get(key);
-    return [updatePath, newValue];
+    return [map.get(key), newValue];
   });
 }

@@ -2,17 +2,14 @@ const directUpdate = require('./directUpdate');
 const createDirectUpdateHandlerReducer = require('./directUpdateHandlerReducer');
 const createDirectUpdatePostprocessingReducer = require('./directUpdatePostprocessingReducer');
 const { sequencialReducerComposer } = require('./utils');
-const createProxyHandler = require('./createProxyHandler');
-
 
 const directUpdateEnhancer = createStore => (defaultReducer, preloadedState, enhancer) => {
   const map = new WeakMap();
-  const proxyHandler = createProxyHandler(map);
 
   const enhancedReducer = sequencialReducerComposer(
-    createDirectUpdateHandlerReducer(map, proxyHandler),
+    createDirectUpdateHandlerReducer(map),
     defaultReducer,
-    createDirectUpdatePostprocessingReducer(map, proxyHandler)
+    createDirectUpdatePostprocessingReducer(map)
   );
   const store = createStore(enhancedReducer, preloadedState, enhancer);
 
