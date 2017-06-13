@@ -9,14 +9,11 @@ var createDirectUpdatePostprocessingReducer = require('./directUpdatePostprocess
 var _require = require('./utils'),
     sequencialReducerComposer = _require.sequencialReducerComposer;
 
-var createProxyHandler = require('./createProxyHandler');
-
 var directUpdateEnhancer = function directUpdateEnhancer(createStore) {
   return function (defaultReducer, preloadedState, enhancer) {
     var map = new WeakMap();
-    var proxyHandler = createProxyHandler(map);
 
-    var enhancedReducer = sequencialReducerComposer(createDirectUpdateHandlerReducer(map, proxyHandler), defaultReducer, createDirectUpdatePostprocessingReducer(map, proxyHandler));
+    var enhancedReducer = sequencialReducerComposer(createDirectUpdateHandlerReducer(map), defaultReducer, createDirectUpdatePostprocessingReducer(map));
     var store = createStore(enhancedReducer, preloadedState, enhancer);
 
     // assign this store context to directUpdate!

@@ -10,18 +10,15 @@ var _require = require('./constants'),
 var _require2 = require('./utils'),
     deepPlant = _require2.deepPlant;
 
-var _require3 = require('./constants'),
-    PrimitiveTransaction = _require3.PrimitiveTransaction;
-
-module.exports = function createDirectUpdateHandler(map, proxyHandler) {
+module.exports = function createDirectUpdateHandler(map) {
   return function directUpdateHandlerReducer(previousState, action) {
     // un update;
     if (action.type === ACTION_DIRECT_UPDATE) {
       var batchArgs = action.batchArgs;
 
-      proxyHandler.directUpdateTransaction = true;
-      var updateMeta = transformBatchArgsToUpdateMeta(map, previousState, batchArgs());
-      proxyHandler.directUpdateTransaction = false;
+      if (typeof batchArgs === 'function') batchArgs = batchArgs();
+
+      var updateMeta = transformBatchArgsToUpdateMeta(map, previousState, batchArgs);
 
       // return newly updated state
       return updateMeta.reduce(function (prevState, meta) {
@@ -48,7 +45,6 @@ function transformBatchArgsToUpdateMeta(map, state, batchArgs) {
     if ((typeof key === 'undefined' ? 'undefined' : _typeof(key)) !== 'object') {
       throw new Error('Update path is NOT correct. Did you pass a primitive value itself as the update key?');
     }
-    var updatePath = key instanceof PrimitiveTransaction ? key.path : map.get(key);
-    return [updatePath, newValue];
+    return [map.get(key), newValue];
   });
 }
