@@ -26,9 +26,15 @@ module.exports = function directUpdateReducerCreator() {
       nextState = dirtyState;
     }
 
-    nextState = walkTreeAndFindChanges(previousState, nextState, map, proxyHandler, function(path, previousState, changedState) {
-      map.set(changedState, path);
-    });
+    nextState = walkTreeAndFindChanges(
+      previousState,
+      nextState,
+      map,
+      proxyHandler,
+      function(path, previousState, changedState) {
+        map.set(changedState, path);
+      }
+    );
 
     map.set(nextState, 'root');
 

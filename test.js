@@ -1,6 +1,6 @@
 const test = require('tape');
 const { directUpdateEnhancer, directUpdate } = require('./src');
-const { createStore, compose } = require('redux');
+const { createStore } = require('redux');
 
 const initialState = { data: 0 };
 const testReducer = function(state, action) {

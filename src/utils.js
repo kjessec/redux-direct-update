@@ -2,7 +2,6 @@ exports.isArray = Array.isArray;
 exports.isObject = obj => obj === Object(obj);
 exports.sequencialReducerComposer = (...reducers) => (state, action) => reducers.reduce((t, f) => f(t, action), state);
 
-const PrimitiveWrapper = require('./PrimitiveWrapper');
 exports.deepPlant = function deepPlantWithPrimitiveWrapperFlatten(source, path, reduce) {
   const sepPath = path.split('.').slice(1);
   return recursivePlant(source, sepPath, reduce);
@@ -34,7 +33,7 @@ function recursivePlant(state, sepPath, reduce) {
 function sanitize(state) {
   // sanitize
   if(exports.isArray(state)) {
-    return state.map(flattenIfWrappedPrimitive);
+    return state.slice(0);
   }
 
   else if(exports.isObject(state)) {
@@ -46,8 +45,4 @@ function sanitize(state) {
   }
 
   return state;
-}
-
-function flattenIfWrappedPrimitive(value) {
-  return value instanceof PrimitiveWrapper ? value.valueOf() : value;
 }
