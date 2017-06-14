@@ -37,7 +37,9 @@ module.exports = function createDirectUpdateHandler(map) {
 };
 
 function transformBatchArgsToUpdateMeta(map, state, batchArgs) {
-  return batchArgs.map(function (_ref) {
+  return batchArgs.filter(function (x) {
+    return x;
+  }).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 2),
         key = _ref2[0],
         newValue = _ref2[1];
