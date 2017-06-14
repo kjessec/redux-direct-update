@@ -22,7 +22,7 @@ module.exports = function createDirectUpdateHandler(map) {
 };
 
 function transformBatchArgsToUpdateMeta(map, state, batchArgs) {
-  return batchArgs.map(([key, newValue]) => {
+  return batchArgs.filter(x => x).map(([key, newValue]) => {
     if(typeof key !== 'object') {
       throw new Error('Update path is NOT correct. Did you pass a primitive value itself as the update key?');
     }
