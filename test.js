@@ -1,5 +1,5 @@
 const test = require('tape');
-const { directUpdateEnhancer, directUpdate } = require('./src');
+const { createDirectUpdateContext, createDirectUpdateFn, composeReducers } = require('./src');
 const { createStore } = require('redux');
 
 const initialState = { data: 0 };
@@ -17,9 +17,18 @@ const testReducer = function(state, action) {
 const ACTION_INCREMENT = { type: 'INCREMENT' };
 const ACTION_DECREMENT = { type: 'DECREMENT' };
 
-const createTestStore = loadedInitialState => createStore(
-  testReducer, loadedInitialState || initialState, directUpdateEnhancer
-);
+function createTestStore(loadedInitialState) {
+  const directUpdateContext = createDirectUpdateContext();
+  const directUpdateEnabledReducer = composeReducers(
+    directUpdateContext.directUpdateHandlerReducer,
+    testReducer,
+    directUpdateContext.directUpdatePostprocessingReducer
+  );
+  const store = createStore(directUpdateEnabledReducer, loadedInitialState || initialState);
+  const directUpateFn = store.directUpdate = createDirectUpdateFn(store.dispatch);
+
+  return store;
+}
 
 test('directUpdateMiddleware does not interefere with the default redux behaviour', function(t) {
   const store = createTestStore();
@@ -54,7 +63,6 @@ test('directUpdate is attached to store', function(t) {
   const store = createTestStore();
 
   t.ok(store.directUpdate, 'directUpdate attachment OK');
-  t.ok(store.directUpdate === directUpdate, 'identity OK');
   t.end();
 });
 
@@ -62,7 +70,7 @@ test('directUpdate works', function(t) {
   const store = createTestStore();
   const state = store.getState();
 
-  store.directUpdate(() => [
+  store.directUpdate([
     [state, state => ({ ...state, data: 9999 })]
   ]);
 
@@ -74,7 +82,7 @@ test('functional update works', function(t) {
   const store = createTestStore();
   const state = store.getState();
 
-  store.directUpdate(() => [
+  store.directUpdate([
     [state, state => ({ ...state, added: 1 })]
   ]);
 
@@ -86,7 +94,7 @@ test('updating store itself works', function(t) {
   const store = createTestStore();
   const state = store.getState();
 
-  store.directUpdate(() => [
+  store.directUpdate([
     [state, state => ({ ...state, test2: 1 })]
   ]);
 
@@ -113,7 +121,7 @@ test('complex works', function(t) {
   store.dispatch(ACTION_INCREMENT); // 2
   store.dispatch(ACTION_INCREMENT); // 3
   store.dispatch(ACTION_INCREMENT); // 4
-  store.directUpdate(() => [
+  store.directUpdate([
     [state.jesse.a.b.c.d.e[0], state => ({ ...state, hello: 'goodbye' })],
     [state.supper[0], state => ({ ...state, sth: 3 })],
     [state.supper[1], state => ({ ...state, sth: 3333333 })]
@@ -122,7 +130,7 @@ test('complex works', function(t) {
   store.dispatch(ACTION_INCREMENT); // 6
   store.dispatch(ACTION_INCREMENT); // 7
   const nextState1 = store.getState();
-  store.directUpdate(() => [
+  store.directUpdate([
     [nextState1.supper[1], state => ({ ...state, sth: 5 })]
   ]);
   store.dispatch(ACTION_INCREMENT); // 8
@@ -143,10 +151,11 @@ test('stress test', function(t) {
 
   for(let i=0; i<200; i++) {
     const state = store.getState();
-    directUpdate(() => [
+    store.directUpdate([
       [state.a.b.c.d.e.f.g, state => ({ ...state, h: state.h+1 })]
     ]);
   }
+
   t.ok(true);
   t.end();
 });
@@ -158,14 +167,16 @@ test('passing refs to other function', function(t) {
   const store = createTestStore(sampleComplexData);
 
   const updateInFunction = (variable, target) => {
-    directUpdate(() => [
+    store.directUpdate([
       [variable, state => ({ ...state, h: target })]
     ]);
   };
 
   const state = store.getState();
   updateInFunction(state.a.b.c.d.e.f[0].g, 4444);
-  t.equal(store.getState().a.b.c.d.e.f[0].g.h, 4444);
+  t.deepEqual(store.getState().a.b.c.d.e.f[0].g, { h: 4444 });
+
+  console.log('final', store.getState().a.b.c.d.e);
 
   t.end();
 });
