@@ -91,6 +91,7 @@ test('updating store itself works', function(t) {
   ]);
 
   const nextState = store.getState();
+
   t.equal(nextState.test2, 1);
   t.equal(nextState.data, 0);
   t.end();
@@ -141,12 +142,10 @@ test('stress test', function(t) {
   const store = createTestStore(sampleComplexData);
 
   for(let i=0; i<200; i++) {
-    console.time(1);
     const state = store.getState();
     directUpdate(() => [
       [state.a.b.c.d.e.f.g, state => ({ ...state, h: state.h+1 })]
     ]);
-    console.timeEnd(1);
   }
   t.ok(true);
   t.end();

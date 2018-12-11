@@ -12,24 +12,25 @@ module.exports = function createDirectUpdatePostProcess(map) {
       function(path, previousState, nextState) {
         map.delete(previousState);
         map.set(nextState, path);
-      }
+      },
+      null
     );
 
     previousState = nextState;
-    map.set(nextState, 'root');
+    map.set(nextState, '');
 
     return nextState;
   };
 };
 
-function walkTreeAndFindChanges(previousState, nextState, callMeWhenChanged, path = 'root') {
+function walkTreeAndFindChanges(previousState, nextState, callMeWhenChanged, path = '') {
   // exit if unchanged
   if(previousState === nextState) return;
 
   if(isArray(nextState)) {
     callMeWhenChanged(path, previousState, nextState);
     nextState.forEach((e, i) =>
-      walkTreeAndFindChanges((previousState || [])[i], e, callMeWhenChanged, `${path}.${i}`)
+      walkTreeAndFindChanges((previousState || [])[i], e, callMeWhenChanged, path ? `${path}.${i}` : `${i}`)
     );
   }
 
@@ -37,7 +38,7 @@ function walkTreeAndFindChanges(previousState, nextState, callMeWhenChanged, pat
     callMeWhenChanged(path, previousState, nextState);
     Object.keys(nextState).forEach(key => {
       walkTreeAndFindChanges(
-        (previousState || {})[key], nextState[key], callMeWhenChanged, `${path}.${key}`
+        (previousState || {})[key], nextState[key], callMeWhenChanged, path ? `${path}.${key}` : `${key}`
       );
     });
   }

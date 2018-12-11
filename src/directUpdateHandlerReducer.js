@@ -1,5 +1,5 @@
 const { ACTION_DIRECT_UPDATE } = require('./constants');
-const { deepPlant } = require('./utils');
+const dotprop = require('dot-prop-immutable');
 
 module.exports = function createDirectUpdateHandler(map) {
   return function directUpdateHandlerReducer(previousState, action) {
@@ -13,7 +13,10 @@ module.exports = function createDirectUpdateHandler(map) {
       // return newly updated state
       return updateMeta.reduce((prevState, meta) => {
         const [updatePath, nextValue] = meta;
-        return deepPlant(prevState, updatePath, typeof nextValue === 'function' ? nextValue : () => nextValue);
+        if(!updatePath) {
+          return (typeof nextValue === 'function' ? nextValue(prevState) : nextValue);
+        }
+        else return dotprop.set(prevState, updatePath, typeof nextValue === 'function' ? nextValue(prevState) : nextValue);
       }, previousState);
     }
 
